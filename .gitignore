@@ -36,6 +36,12 @@ yarn-error.log
 /libpeerconnection.log
 testem.log
 /typings
+/android/.gradle
+/android/.idea
+/android/app/build
+/android/build
+/android/local.properties
+/android/captures
 
 # System files
 .DS_Store

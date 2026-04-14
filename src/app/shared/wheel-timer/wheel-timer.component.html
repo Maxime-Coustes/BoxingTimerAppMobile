@@ -47,15 +47,15 @@
   <!-- Boutons sous le time-wheel -->
   <div class="timer-actions">
     <button mat-raised-button color="primary" (click)="startCustomTimer()" [disabled]="isTimerRunning">
-      <mat-icon>play_arrow</mat-icon>
+      <span aria-hidden="true">&#9654;</span>
       Démarrer
     </button>
     <button mat-raised-button color="accent" (click)="pauseTimer()" [disabled]="!isTimerRunning || isPaused">
-      <mat-icon>pause</mat-icon>
+      <span aria-hidden="true">&#10074;&#10074;</span>
       Pause
     </button>
     <button mat-raised-button color="warn" (click)="stopTimer()" [disabled]="!isTimerRunning">
-      <mat-icon>stop</mat-icon>
+      <span aria-hidden="true">&#9632;</span>
       Stop
     </button>
   </div>

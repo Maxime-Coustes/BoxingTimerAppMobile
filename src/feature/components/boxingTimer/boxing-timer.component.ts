@@ -3,76 +3,71 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatTabsModule } from '@angular/material/tabs';
-import { ClockComponent } from "../clock/clock.component";
-import { VoiceService } from '../../../app/shared/voices/voice.service';
+import { ClockComponent } from '../clock/clock.component';
+import { SpeechService } from '../../../app/shared/voices/speech.service';
 import { InstructionsService } from '../../../app/shared/instructions/instructions.service';
 
 @Component({
   selector: 'boxing-timer',
   standalone: true,
-  imports: [FormsModule, CommonModule, MatSliderModule, MatButtonModule, MatIconModule, MatExpansionModule,
-    MatTabsModule, ClockComponent],
+  imports: [
+    FormsModule,
+    CommonModule,
+    MatSliderModule,
+    MatButtonModule,
+    MatExpansionModule,
+    MatTabsModule,
+    ClockComponent,
+  ],
   templateUrl: './boxing-timer.component.html',
   styleUrls: ['./boxing-timer.component.css']
 })
 export class BoxingTimerComponent implements AfterViewInit {
-  activeTime: number = 180; // Default: 3 minutes
-  restTime: number = 60;   // Default: 1 minute
-  rounds: number = 3;      // Default: 3 rounds
+  activeTime = 180;
+  restTime = 60;
+  rounds = 3;
 
-  // Timer state
-  timeLeft: number = 0;
-  currentRound: number = 0;
-  isRunning: boolean = false;
-  isPaused: boolean = false;
-  currentPhase: 'Active' | 'Rest' = 'Active'; // Tracks current phase
+  timeLeft = 0;
+  currentRound = 0;
+  isRunning = false;
+  isPaused = false;
+  currentPhase: 'Active' | 'Rest' = 'Active';
   private timer: any;
 
-  availableVoices: SpeechSynthesisVoice[] = [];
-  selectedVoice: string | undefined | null; // ID ou nom de la voix sélectionnée
-  defaultVoice: string = 'French (France)+Hugo';
+  constructor(public speechService: SpeechService, public instructionService: InstructionsService) {}
 
-  constructor(public voiceService: VoiceService, public instructionService: InstructionsService) { }
-
- /**
-  * Charge les voix disponibles après l'initialisation du composant.
-  */
-  ngAfterViewInit() {
-    this.voiceService.loadVoices();
+  ngAfterViewInit(): void {
+    void this.speechService.loadVoices();
   }
-  /**
-   * Teste la voix actuellement sélectionnée dans le service vocal.
-   */
-  testVoice() {
-    if (this.voiceService.selectedVoice) {
-      this.voiceService.testVoice(this.voiceService.selectedVoice);
+
+  testSpeech(): void {
+    if (this.speechService.isReady) {
+      void this.speechService.testSpeech();
     }
   }
 
-  /**
-   * Démarre le timer de boxe.
-   * Initialise les paramètres et lance le décompte.
-   */
-  startBoxingTimer() {
-    if (this.isRunning) return;
-
-    this.isRunning = true;
-    this.timeLeft = this.getPhaseDuration(); // Initialise le temps restant pour la phase actuelle
-    this.currentRound = 1; // Commence au premier round
-
-    this.playPhaseStart(); // Joue les instructions vocales pour le début
-    this.startTimer(); // Lance le décompte principal
+  openTtsInstall(): void {
+    void this.speechService.requestInstall();
   }
 
-  /**
-   * Réinitialise le timer à ses paramètres par défaut.
-   * Arrête les timers en cours et réinitialise les variables d'état.
-   */
-  resetTimer() {
+  startBoxingTimer(): void {
+    if (this.isRunning) {
+      return;
+    }
+
+    this.isRunning = true;
+    this.timeLeft = this.getPhaseDuration();
+    this.currentRound = 1;
+
+    this.playPhaseStart();
+    this.startTimer();
+  }
+
+  resetTimer(): void {
     this.stopTimers();
+    this.instructionService.stopSpeaking();
     this.timeLeft = 0;
     this.currentRound = 0;
     this.isRunning = false;
@@ -80,97 +75,69 @@ export class BoxingTimerComponent implements AfterViewInit {
     this.currentPhase = 'Active';
   }
 
-  /**
-   * Met le timer en pause si celui-ci est en cours d'exécution.
-   */
-  pauseTimer() {
+  pauseTimer(): void {
     if (this.isRunning && !this.isPaused) {
-      this.stopTimers(); // Arrête tous les timers
+      this.stopTimers();
+      this.instructionService.stopSpeaking();
       this.isPaused = true;
     }
   }
 
-  /**
-   * Reprend le timer si celui-ci était en pause.
-   */
-  resumeTimer() {
+  resumeTimer(): void {
     if (this.isRunning && this.isPaused) {
       this.isPaused = false;
-      this.startTimer(); // Relance le décompte principal
+      this.startTimer();
     }
   }
 
-  /**
-   * Arrête complètement le timer en cours.
-   */
-  stopTimer() {
+  stopTimer(): void {
     this.resetTimer();
   }
 
-  /**
-   * Démarre le décompte principal du timer.
-   * Diminue `timeLeft` chaque seconde et gère les transitions entre phases.
-   */
-  private startTimer() {
+  private startTimer(): void {
     this.timer = setInterval(() => {
       if (this.timeLeft > 0) {
         this.timeLeft--;
 
-        // Instructions vocales pour les 5 dernières secondes de repos
         if (this.isRestPhase() && this.timeLeft <= 5 && this.timeLeft > 0) {
           this.instructionService.speakInstruction(this.timeLeft.toString());
         }
       } else {
-        this.handlePhaseChange(); // Change de phase ou termine l'entraînement
+        this.handlePhaseChange();
       }
     }, 1000);
   }
 
-  /**
-   * Gère les transitions entre phases (active/rest) et les rounds.
-   */
-  private handlePhaseChange() {
+  private handlePhaseChange(): void {
     if (this.isActivePhase()) {
-      this.switchToRestPhase(); // Passe à la phase de repos
+      this.switchToRestPhase();
     } else if (this.currentRound < this.rounds) {
-      this.switchToActivePhase(); // Passe à la phase active pour le prochain round
+      this.switchToActivePhase();
     } else {
-      this.endWorkout(); // Termine l'entraînement après le dernier round
+      this.endWorkout();
     }
   }
 
-  /**
-   * Passe à la phase active et prépare les paramètres correspondants.
-   */
-  private switchToActivePhase() {
+  private switchToActivePhase(): void {
     this.currentPhase = 'Active';
     this.currentRound++;
     this.timeLeft = this.activeTime;
     this.playPhaseStart();
   }
 
-  /**
-   * Passe à la phase de repos et joue les instructions vocales associées.
-   */
-  private switchToRestPhase() {
+  private switchToRestPhase(): void {
     this.currentPhase = 'Rest';
     this.timeLeft = this.restTime;
-    this.stopInstructionTimer(); // Arrête le timer d'instructions
+    this.stopInstructionTimer();
     this.instructionService.speakInstruction(`Repos pendant ${this.restTime} secondes`);
   }
 
-  /**
-   * Termine l'entraînement et joue un message vocal final.
-   */
-  private endWorkout() {
-    this.instructionService.speakInstruction('DING DING DING Entrainement terminé!');
-    this.stopTimer(); // Réinitialise le timer
+  private endWorkout(): void {
+    this.instructionService.speakInstruction('DING DING DING Entrainement termin�!');
+    this.stopTimer();
   }
 
-  /**
-   * Joue les instructions vocales pour le début d'une nouvelle phase.
-   */
-  private playPhaseStart() {
+  private playPhaseStart(): void {
     const message = this.isActivePhase() ? 'Boxez !' : `Repos pendant ${this.restTime} secondes`;
     this.instructionService.speakInstruction(message);
 
@@ -179,40 +146,24 @@ export class BoxingTimerComponent implements AfterViewInit {
     }
   }
 
-  /**
-   * Arrête tous les timers actifs, y compris le timer principal et celui des instructions.
-   */
-  private stopTimers() {
+  private stopTimers(): void {
     clearInterval(this.timer);
     this.stopInstructionTimer();
   }
 
-  /**
-   * Arrête uniquement le timer des instructions vocales.
-   */
-  private stopInstructionTimer() {
+  private stopInstructionTimer(): void {
     clearInterval(this.instructionService.instructionTimer);
   }
 
-  /**
-   * Retourne la durée de la phase actuelle (active ou repos).
-   */
   private getPhaseDuration(): number {
     return this.isActivePhase() ? this.activeTime : this.restTime;
   }
 
-  /**
-   * Vérifie si la phase actuelle est active.
-   */
   private isActivePhase(): boolean {
     return this.currentPhase === 'Active';
   }
 
-  /**
-   * Vérifie si la phase actuelle est une phase de repos.
-   */
   private isRestPhase(): boolean {
     return this.currentPhase === 'Rest';
   }
-
 }

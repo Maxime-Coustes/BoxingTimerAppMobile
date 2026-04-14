@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { ClockComponent } from '../../../feature/components/clock/clock.component';
-import { VoiceService } from '../voices/voice.service';
+import { SpeechService } from '../voices/speech.service';
 import { InstructionsService } from '../instructions/instructions.service';
 
 
@@ -11,11 +11,11 @@ import { InstructionsService } from '../instructions/instructions.service';
     selector: 'wheel-timer',
     templateUrl: './wheel-timer.component.html',
     styleUrls: ['./wheel-timer.component.css'],
-    imports: [CommonModule, MatIconModule, ClockComponent]
+    imports: [CommonModule, MatButtonModule, ClockComponent]
 })
 export class WheelTimer {
 
-    constructor(public voiceService: VoiceService, public instructionService: InstructionsService) { }
+    constructor(public speechService: SpeechService, public instructionService: InstructionsService) { }
 
     private readonly SECONDS_IN_HOUR = 3600;
     private readonly SECONDS_IN_MINUTE = 60;

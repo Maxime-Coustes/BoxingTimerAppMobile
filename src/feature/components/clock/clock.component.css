@@ -21,7 +21,7 @@
 
 /* Le texte dans le SVG */
 .time-display text {
-  font-family: 'Roboto', sans-serif;
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   font-size: 0.5rem;
   letter-spacing: 0.01em;  /* Ajuster légèrement l'espacement */
   transform: scaleX(1.01); /* Augmenter légèrement la largeur du texte */

@@ -1,93 +1,106 @@
-# BoxingTimerApp
+# BoxingTimerAppMobile
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.0.3.
+## Overview
 
-## Development server
+BoxingTimerAppMobile started as an Angular web application.
+It is now packaged as an Android app with Capacitor.
 
-To start a local development server, run:
+The Angular business logic still runs as a web app, but it is shipped inside a native Android app shell:
+- Angular builds the production web bundle
+- Capacitor copies that bundle into the Android project assets
+- Gradle builds the Android APK from the native project
 
-```bash
-ng serve
-```
+This is not a Kotlin rewrite of the app logic. It is a native Android wrapper around the Angular application.
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Deprecated Workflow
 
-## Code scaffolding
+The previous APK workflow based on Bubblewrap, ngrok, `localhost`, and a hosted web origin is deprecated and must not be used.
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+The app no longer depends on:
+- `localhost`
+- `ngrok`
+- Bubblewrap / TWA
+- a remote web origin at runtime
 
-```bash
-ng generate component component-name
-```
+## Development
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
+Working directory:
 
 ```bash
-ng build
+C:\Workspace\BoxingTimerAppMobile
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+Start the Angular development server for browser-only development:
 
 ```bash
-ng test
+npm start
 ```
 
-## Running end-to-end tests
+## Android Build Workflow
 
-For end-to-end (e2e) testing, run:
+### 1. Build the Angular web app
+
+Run from the project root:
 
 ```bash
-ng e2e
+cd C:\Workspace\BoxingTimerAppMobile
+npm run build:web
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+This generates the production web bundle in:
 
-## Additional Resources
+```text
+dist/boxing-timer-app/browser
+```
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+### 2. Sync the Angular build into the Android project
 
+Run from the project root:
 
+```bash
+cd C:\Workspace\BoxingTimerAppMobile
+npx cap sync android
+```
 
-# Custom infos:
-To build to project : ng build --configuration production     (it build the dist/ folder)
+This copies the Angular production build into the Capacitor Android project assets.
 
-The go on /dist/boxing-timer-app/browser
-and run   http-server --cors --spa
+### 3. Build the debug APK with Gradle
 
+Run from the Android project directory:
 
-To access to it from mobile device go on http://192.168.X.XX:8080/
-(check ifconfig  looking for 192.168...)
+```bash
+cd C:\Workspace\BoxingTimerAppMobile\android
+.\gradlew.bat assembleDebug
+```
 
+## Generated APK Location
 
-# BUILD APK
+After a successful debug build, the APK is generated at:
 
-AFTER PURGE: (rm -rf /dist dans mon projet)
-0- ng build --configuration production
-1- npx serve dist/boxing-timer-app/browser/  afin d'exposer le port3000 (check  lsof -i :3000 &&  kill -9 <PID> if needed)
-2- ngrok http 3000      pour obtenir une URL accessible depuis ton APK (check= ps aux | grep ngrok   && kill -9 <PID> if needed)
-3- mettre à jour bubblewrap grace à la ligne Forwarding (ici localhost:3000)
-MANUEL:
-	bubblewrap init --manifest=http://localhost:3000/manifest.webmanifest --verbose
-	Domain: la ligne Forwarding
-	UrlPath /
-	...
-4- on build: bubblewrap build
-5- on l'installe : adb install app-release.apk
-dans mon cas, je copie le app-release-signed.apk vers une USB pour la mettre sur mon tel via un windows
-AUTO:
-cd /workspace/BoxingTimerApp/src/bash$ 
-python3 build.py
+```text
+android/app/build/outputs/apk/debug/app-debug.apk
+```
 
-Then, cp/paste app-release-signed.apk  on mobile for install
+From the repository root, the full path is:
+
+```text
+C:\Workspace\BoxingTimerAppMobile\android\app\build\outputs\apk\debug\app-debug.apk
+```
+
+## Optional Android Studio Workflow
+
+Open the native Android project from the repository root:
+
+```bash
+cd C:\Workspace\BoxingTimerAppMobile
+npm run android:open
+```
+
+## Summary
+
+Supported packaging flow:
+1. Build Angular with `npm run build:web`
+2. Sync Capacitor with `npx cap sync android`
+3. Build Android with `android\.\gradlew.bat assembleDebug`
+
+This is the only supported Android APK workflow for this project.

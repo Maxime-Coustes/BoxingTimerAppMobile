@@ -1,96 +1,108 @@
 <div class="timer-config">
-    <mat-tab-group>
-        <mat-tab label="Voix" *ngIf="availableVoices.length > 0">
-            <div>
-                <ul>
-                    <li *ngFor="let voice of availableVoices" (click)="testVoice()">
-                        {{ voice.name }} ({{ voice.lang }})
-                    </li>
-                </ul>
-                <p>Recommandation: French (France)+Hugo (fr-FR) ou French (France)+Denis (fr-FR)</p>
-                <label>
-                    Voix :
-                    <select [(ngModel)]="selectedVoice">
-                        <option *ngFor="let voice of availableVoices" [value]="voice.name">
-                            {{ voice.name }} ({{ voice.lang }})
-                        </option>
-                    </select>
-                </label>
-            </div>
+  <mat-tab-group>
+    <mat-tab label="Voix">
+      <div *ngIf="speechService.statusMessage as statusMessage">
+        <p>{{ statusMessage }}</p>
+        <button *ngIf="speechService.isNativePlatform && speechService.needsVoiceInstall" mat-raised-button color="primary" (click)="openTtsInstall()">
+          Open Android TTS Settings
+        </button>
+      </div>
 
-        </mat-tab>
+      <div>
+        <label>
+          Speech rate:
+        </label>
+        <mat-slider min="0.5" max="1.5" step="0.05" showTickMarks discrete>
+          <input matSliderThumb [(ngModel)]="speechService.speechRate">
+        </mat-slider>
+      </div>
 
-        <!-- Instructions configuration -->
-        <mat-tab label="Instructions">
-            <div>
-                <label>
-                    Intervalle des instructions (secondes):
-                    <input type="number" [(ngModel)]="instructionService.instructionInterval" min="1" [disabled]="instructionService.noInstructions" />
-                </label>
-            </div>
-            <div>
-                <label>
-                    Valeur min / max des instructions:
-                </label>
-                <mat-slider min="1" max="10" step="1" showTickMarks discrete [disabled]="instructionService.noInstructions">
-                    <input value="1" matSliderStartThumb [(ngModel)]="instructionService.instructionMinValue " [disabled]="instructionService.noInstructions">
-                    <input value="3" matSliderEndThumb [(ngModel)]="instructionService.instructionMaxValue" [disabled]="instructionService.noInstructions">
-                </mat-slider>
-            </div>
-            <div class="checkbox-container">
-                <input type="checkbox" id="noInstructions" [(ngModel)]="instructionService.noInstructions" />
-                <label for="noInstructions">Aucune instruction</label>
-            </div>
+      <div>
+        <label>
+          Speech volume:
+        </label>
+        <mat-slider min="0" max="1" step="0.05" showTickMarks discrete>
+          <input matSliderThumb [(ngModel)]="speechService.speechVolume">
+        </mat-slider>
+      </div>
 
-        </mat-tab>
+      <p *ngIf="speechService.isNativePlatform">
+        Android uses the default voice configured by the selected TTS engine. The app does not expose manual voice selection.
+      </p>
+      <p *ngIf="speechService.isNativePlatform">
+        Volume is requested through the plugin, but some Android TTS engines may still follow the device media volume settings.
+      </p>
 
-        <!-- rounds configuration -->
-        <mat-tab label="Rounds">
-            <div>
-                <label>
-                    Active Time (seconds):
-                    <input type="number" [(ngModel)]="activeTime" />
-                </label>
-            </div>
-            <div>
-                <label>
-                    Rest Time (seconds):
-                    <input type="number" [(ngModel)]="restTime" />
-                </label>
-            </div>
-            <div>
-                <label>
-                    Number of Rounds:
-                    <input type="number" [(ngModel)]="rounds" />
-                </label>
-            </div>
-        </mat-tab>
+      <button mat-raised-button color="primary" (click)="testSpeech()" [disabled]="!speechService.isReady">
+        Test speech
+      </button>
+    </mat-tab>
 
-        <mat-tab label="Timer">
-            <!-- actions buttons -->
-            <div class="button-group">
-                <button mat-icon-button color="primary" (click)="startBoxingTimer()" [disabled]="isRunning">
-                    <mat-icon>play_arrow</mat-icon>
-                    <span>Play</span>
-                </button>
-                <button mat-icon-button color="accent" (click)="pauseTimer()" [disabled]="!isRunning || isPaused">
-                    <mat-icon>pause</mat-icon>
-                    <span>Pause</span>
-                </button>
-                <button mat-icon-button color="primary" (click)="resumeTimer()" [disabled]="!isRunning || !isPaused">
-                    <mat-icon>replay</mat-icon>
-                    <span>Resume</span>
-                </button>
-                <button mat-icon-button color="warn" (click)="stopTimer()" [disabled]="!isRunning">
-                    <mat-icon>stop</mat-icon>
-                    <span>Stop</span>
-                </button>
-            </div>
+    <mat-tab label="Instructions">
+      <div>
+        <label>
+          Instruction interval (seconds):
+          <input type="number" [(ngModel)]="instructionService.instructionInterval" min="1" [disabled]="instructionService.noInstructions" />
+        </label>
+      </div>
+      <div>
+        <label>
+          Instruction min / max value:
+        </label>
+        <mat-slider min="1" max="10" step="1" showTickMarks discrete [disabled]="instructionService.noInstructions">
+          <input value="1" matSliderStartThumb [(ngModel)]="instructionService.instructionMinValue" [disabled]="instructionService.noInstructions">
+          <input value="3" matSliderEndThumb [(ngModel)]="instructionService.instructionMaxValue" [disabled]="instructionService.noInstructions">
+        </mat-slider>
+      </div>
+      <div class="checkbox-container">
+        <input type="checkbox" id="noInstructions" [(ngModel)]="instructionService.noInstructions" />
+        <label for="noInstructions">Disable instructions</label>
+      </div>
+    </mat-tab>
 
-            <!-- display clock -->
-            <clock [rounds]="rounds" [currentRound]="currentRound" [timeLeft]="timeLeft" [currentPhase]="currentPhase">
-            </clock>
+    <mat-tab label="Rounds">
+      <div>
+        <label>
+          Active Time (seconds):
+          <input type="number" [(ngModel)]="activeTime" />
+        </label>
+      </div>
+      <div>
+        <label>
+          Rest Time (seconds):
+          <input type="number" [(ngModel)]="restTime" />
+        </label>
+      </div>
+      <div>
+        <label>
+          Number of Rounds:
+          <input type="number" [(ngModel)]="rounds" />
+        </label>
+      </div>
+    </mat-tab>
 
-        </mat-tab>
-    </mat-tab-group>
+    <mat-tab label="Timer">
+      <div class="button-group">
+        <button mat-icon-button color="primary" (click)="startBoxingTimer()" [disabled]="isRunning">
+          <span aria-hidden="true">&#9654;</span>
+          <span>Play</span>
+        </button>
+        <button mat-icon-button color="accent" (click)="pauseTimer()" [disabled]="!isRunning || isPaused">
+          <span aria-hidden="true">&#10074;&#10074;</span>
+          <span>Pause</span>
+        </button>
+        <button mat-icon-button color="primary" (click)="resumeTimer()" [disabled]="!isRunning || !isPaused">
+          <span aria-hidden="true">&#8635;</span>
+          <span>Resume</span>
+        </button>
+        <button mat-icon-button color="warn" (click)="stopTimer()" [disabled]="!isRunning">
+          <span aria-hidden="true">&#9632;</span>
+          <span>Stop</span>
+        </button>
+      </div>
+
+      <clock [rounds]="rounds" [currentRound]="currentRound" [timeLeft]="timeLeft" [currentPhase]="currentPhase">
+      </clock>
+    </mat-tab>
+  </mat-tab-group>
 </div>

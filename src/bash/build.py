@@ -1,3 +1,9 @@
+"""Legacy Bubblewrap helper kept for reference only.
+
+This project now uses Capacitor for Android packaging.
+Do not use this script for current APK builds.
+"""
+
 import time
 import requests
 import pexpect
