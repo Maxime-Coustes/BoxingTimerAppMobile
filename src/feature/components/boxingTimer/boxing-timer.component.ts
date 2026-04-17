@@ -3,11 +3,18 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatButtonModule } from '@angular/material/button';
-import { MatExpansionModule } from '@angular/material/expansion';
 import { MatTabsModule } from '@angular/material/tabs';
 import { ClockComponent } from '../clock/clock.component';
 import { SpeechService } from '../../../app/shared/voices/speech.service';
 import { InstructionsService } from '../../../app/shared/instructions/instructions.service';
+import {
+  COMBINATION_CATEGORIES,
+  INSTRUCTION_MODES,
+  CombinationCategory,
+  InstructionMode,
+  TechniqueGroup,
+  TECHNIQUE_GROUPS,
+} from '../../../app/shared/instructions/instruction.models';
 
 @Component({
   selector: 'boxing-timer',
@@ -17,7 +24,6 @@ import { InstructionsService } from '../../../app/shared/instructions/instructio
     CommonModule,
     MatSliderModule,
     MatButtonModule,
-    MatExpansionModule,
     MatTabsModule,
     ClockComponent,
   ],
@@ -25,6 +31,16 @@ import { InstructionsService } from '../../../app/shared/instructions/instructio
   styleUrls: ['./boxing-timer.component.css']
 })
 export class BoxingTimerComponent implements AfterViewInit {
+  readonly instructionModes: Array<{ value: InstructionMode; label: string }> = [
+    { value: INSTRUCTION_MODES[0], label: 'Number' },
+    { value: INSTRUCTION_MODES[1], label: 'Combination' },
+  ];
+  readonly combinationCategories: Array<{ value: CombinationCategory; label: string }> = [
+    { value: COMBINATION_CATEGORIES[0], label: 'Punches only' },
+    { value: COMBINATION_CATEGORIES[1], label: 'Kicks only' },
+    { value: COMBINATION_CATEGORIES[2], label: 'Full contact' },
+  ];
+  readonly techniqueGroups: TechniqueGroup[] = TECHNIQUE_GROUPS;
   activeTime = 180;
   restTime = 60;
   rounds = 3;
@@ -52,8 +68,29 @@ export class BoxingTimerComponent implements AfterViewInit {
     void this.speechService.requestInstall();
   }
 
+  isCombinationMode(): boolean {
+    return this.instructionService.instructionMode === 'combination';
+  }
+
+  canStartTimer(): boolean {
+    if (!this.isCombinationMode()) {
+      return true;
+    }
+
+    return this.instructionService.hasEnabledTechniquesForSelectedCategory();
+  }
+
+  isTechniqueEnabled(techniqueId: string): boolean {
+    return this.instructionService.isTechniqueEnabled(techniqueId);
+  }
+
+  onTechniqueToggle(techniqueId: string, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.instructionService.setTechniqueEnabled(techniqueId, input.checked);
+  }
+
   startBoxingTimer(): void {
-    if (this.isRunning) {
+    if (this.isRunning || !this.canStartTimer()) {
       return;
     }
 
@@ -133,7 +170,7 @@ export class BoxingTimerComponent implements AfterViewInit {
   }
 
   private endWorkout(): void {
-    this.instructionService.speakInstruction('DING DING DING Entrainement terminé!');
+    this.instructionService.speakInstruction('DING DING DING Entrainement termine!');
     this.stopTimer();
   }
 

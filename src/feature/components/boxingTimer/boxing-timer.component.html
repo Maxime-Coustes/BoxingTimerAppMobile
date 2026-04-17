@@ -47,13 +47,53 @@
       </div>
       <div>
         <label>
-          Instruction min / max value:
+          Instruction mode:
+          <select [(ngModel)]="instructionService.instructionMode" [disabled]="instructionService.noInstructions">
+            <option *ngFor="let mode of instructionModes" [ngValue]="mode.value">{{ mode.label }}</option>
+          </select>
+        </label>
+      </div>
+      <div *ngIf="isCombinationMode()">
+        <label>
+          Combination category:
+          <select [(ngModel)]="instructionService.combinationCategory" [disabled]="instructionService.noInstructions">
+            <option *ngFor="let category of combinationCategories" [ngValue]="category.value">{{ category.label }}</option>
+          </select>
+        </label>
+      </div>
+      <div>
+        <label>
+          Instruction min / max count:
         </label>
         <mat-slider min="1" max="10" step="1" showTickMarks discrete [disabled]="instructionService.noInstructions">
           <input value="1" matSliderStartThumb [(ngModel)]="instructionService.instructionMinValue" [disabled]="instructionService.noInstructions">
           <input value="3" matSliderEndThumb [(ngModel)]="instructionService.instructionMaxValue" [disabled]="instructionService.noInstructions">
         </mat-slider>
       </div>
+      <p class="instruction-hint" *ngIf="instructionService.instructionMode === 'number'">
+        The min and max values define the spoken number range.
+      </p>
+      <p class="instruction-hint" *ngIf="isCombinationMode()">
+        The min and max values define how many techniques are spoken in each combination.
+      </p>
+      <div class="technique-selection" *ngIf="isCombinationMode()">
+        <p class="technique-selection-title">Technique selection</p>
+        <div class="technique-group" *ngFor="let group of techniqueGroups">
+          <p class="technique-group-title">{{ group.label }}</p>
+          <label class="technique-option" *ngFor="let technique of group.techniques">
+            <input
+              type="checkbox"
+              [checked]="isTechniqueEnabled(technique.id)"
+              (change)="onTechniqueToggle(technique.id, $event)"
+              [disabled]="instructionService.noInstructions"
+            />
+            <span>{{ technique.label }}</span>
+          </label>
+        </div>
+      </div>
+      <p class="instruction-warning" *ngIf="isCombinationMode() && !instructionService.hasEnabledTechniquesForSelectedCategory()">
+        {{ instructionService.getInvalidCombinationSelectionMessage() }}
+      </p>
       <div class="checkbox-container">
         <input type="checkbox" id="noInstructions" [(ngModel)]="instructionService.noInstructions" />
         <label for="noInstructions">Disable instructions</label>
@@ -83,7 +123,7 @@
 
     <mat-tab label="Timer">
       <div class="button-group">
-        <button mat-icon-button color="primary" (click)="startBoxingTimer()" [disabled]="isRunning">
+        <button mat-icon-button color="primary" (click)="startBoxingTimer()" [disabled]="isRunning || !canStartTimer()">
           <span aria-hidden="true">&#9654;</span>
           <span>Play</span>
         </button>

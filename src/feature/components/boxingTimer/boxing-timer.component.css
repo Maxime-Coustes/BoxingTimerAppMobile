@@ -1,22 +1,20 @@
-/* ==== Styles Généraux ==== */
+/* ==== General Styles ==== */
 .timer-config {
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 20px;
-  gap: 20px; /* Espacement entre les éléments */
+  gap: 20px;
 }
 
-/* Styles généraux pour les labels */
 .timer-config label {
-  display: block; /* Assure que chaque label est sur sa propre ligne */
-  margin: 1.5rem 0 0.5rem; /* Espacement haut (1.5rem) et bas (0.5rem) */
+  display: block;
+  margin: 1.5rem 0 0.5rem;
   width: 100%;
   max-width: 300px;
   font-size: 1.2rem;
 }
 
-/* Styles généraux pour les inputs */
 .timer-config input {
   width: 85%;
   padding: 18px;
@@ -24,10 +22,14 @@
   margin-top: 1px;
 }
 
-/* ==== Styles pour la section Voix ==== */
-/* Aucun style spécifique pour cette section */
+.timer-config select {
+  width: 100%;
+  max-width: 300px;
+  padding: 12px;
+  font-size: 16px;
+  margin-top: 8px;
+}
 
-/* ==== Styles pour la section Instructions ==== */
 .timer-config mat-slider {
   margin: 10px;
   width: 90%;
@@ -37,21 +39,64 @@
 .checkbox-container {
   display: flex;
   align-items: center;
-  gap: 0.5rem; /* Espacement entre la checkbox et le label */
-  font-size: 1rem; /* Taille du texte */
+  gap: 0.5rem;
+  font-size: 1rem;
 }
 
 .checkbox-container input[type="checkbox"] {
   width: 20px;
-  height: 20px; /* Taille personnalisée de la checkbox */
+  height: 20px;
 }
 
+.instruction-hint {
+  width: 100%;
+  max-width: 300px;
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+}
 
-/* ==== Styles pour la section Rounds ==== */
-/* Aucun style spécifique pour cette section */
+.technique-selection {
+  width: 100%;
+  max-width: 320px;
+  margin-top: 1rem;
+}
 
-/* ==== Styles pour la section Timer ==== */
-/* Styles pour l'affichage du Timer */
+.technique-selection-title,
+.technique-group-title {
+  margin: 0.75rem 0 0.5rem;
+  font-weight: 600;
+}
+
+.technique-group {
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+}
+
+.technique-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.5rem 0;
+  font-size: 1rem;
+}
+
+.technique-option input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+}
+
+.instruction-warning {
+  width: 100%;
+  max-width: 320px;
+  margin: 0.75rem 0 0;
+  color: #ffcc80;
+  font-size: 0.95rem;
+}
+
 .timer-display {
   text-align: center;
   display: block;
@@ -60,63 +105,53 @@
 }
 
 h1, h2 {
-  font-size: calc(1.5rem + 1vw); /* Taille de police responsive */
+  font-size: calc(1.5rem + 1vw);
 }
 
-/* Styles pour les boutons d'actions */
 .button-group {
-  display: flex; /* Flexbox pour aligner horizontalement */
-  justify-content: space-evenly; /* Répartition uniforme des boutons */
-  align-items: center; /* Alignement vertical au centre */
-  gap: 8px; /* Espacement entre les boutons */
-  padding: 0; /* Aucune marge intérieure */
-  overflow: hidden; /* Évite le scroll horizontal */
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  overflow: hidden;
   margin-top: 10px;
 }
 
 .button-group button {
-  flex: 0 0 auto; /* Taille automatique sans flex-grow */
-  width: 60px; /* Taille légèrement augmentée pour plus de clarté */
-  height: 60px; /* Correspond à la largeur */
-  padding: 0; /* Supprime le padding interne */
-  text-align: center; /* Assure que le contenu est centré */
+  flex: 0 0 auto;
+  width: 60px;
+  height: 60px;
+  padding: 0;
+  text-align: center;
 }
 
-/* Styles spécifiques pour les boutons avec du texte */
 .button-group button span {
-  font-size: 14px; /* Ajuste la taille du texte */
-  display: block; /* S'assure que le texte ne chevauche pas l'icône */
-  margin-top: 4px; /* Ajoute un peu d'espacement sous l'icône */
-  text-align: center; /* Centre le texte sous l'icône */
+  font-size: 14px;
+  display: block;
+  margin-top: 4px;
+  text-align: center;
 }
 
 mat-icon {
-  font-size: 24px; /* Taille standard des icônes */
-  line-height: 1; /* Évite les décalages */
+  font-size: 24px;
+  line-height: 1;
 }
 
-
-/* ==== Styles Responsives (Mobile) ==== */
 @media (max-width: 600px) {
   .timer-config label {
-    max-width: 75%; /* Limite la largeur des labels */
-    padding: 1rem; /* Ajoute un padding interne */
-    margin-top: 1.5rem; /* Plus d'espace sur mobile */
+    max-width: 75%;
+    padding: 1rem;
+    margin-top: 1.5rem;
   }
 
   .button-group button {
-    flex: 1; /* Les boutons prennent toute la largeur disponible */
+    flex: 1;
     margin: 0.2rem;
   }
 
   button {
     width: 100%;
-    max-width: 300px; /* Limite la largeur maximale */
+    max-width: 300px;
   }
 }
-
-
-
-
-
-
