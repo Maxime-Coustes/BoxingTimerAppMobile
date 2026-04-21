@@ -1,4 +1,4 @@
-import { Component, AfterViewInit } from '@angular/core';
+import { AfterViewInit, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatSliderModule } from '@angular/material/slider';
@@ -12,6 +12,7 @@ import {
   INSTRUCTION_MODES,
   CombinationCategory,
   InstructionMode,
+  TechniqueDefinition,
   TechniqueGroup,
   TECHNIQUE_GROUPS,
 } from '../../../app/shared/instructions/instruction.models';
@@ -28,7 +29,7 @@ import {
     ClockComponent,
   ],
   templateUrl: './boxing-timer.component.html',
-  styleUrls: ['./boxing-timer.component.css']
+  styleUrls: ['./boxing-timer.component.css'],
 })
 export class BoxingTimerComponent implements AfterViewInit {
   readonly instructionModes: Array<{ value: InstructionMode; label: string }> = [
@@ -36,8 +37,8 @@ export class BoxingTimerComponent implements AfterViewInit {
     { value: INSTRUCTION_MODES[1], label: 'Combination' },
   ];
   readonly combinationCategories: Array<{ value: CombinationCategory; label: string }> = [
-    { value: COMBINATION_CATEGORIES[0], label: 'Punches only' },
-    { value: COMBINATION_CATEGORIES[1], label: 'Kicks only' },
+    { value: COMBINATION_CATEGORIES[0], label: 'Punches' },
+    { value: COMBINATION_CATEGORIES[1], label: 'Kicks' },
     { value: COMBINATION_CATEGORIES[2], label: 'Full contact' },
   ];
   readonly techniqueGroups: TechniqueGroup[] = TECHNIQUE_GROUPS;
@@ -50,12 +51,84 @@ export class BoxingTimerComponent implements AfterViewInit {
   isRunning = false;
   isPaused = false;
   currentPhase: 'Active' | 'Rest' = 'Active';
+  workoutCompleted = false;
   private timer: any;
 
-  constructor(public speechService: SpeechService, public instructionService: InstructionsService) {}
+  constructor(
+    public speechService: SpeechService,
+    public instructionService: InstructionsService
+  ) {}
 
   ngAfterViewInit(): void {
     void this.speechService.loadVoices();
+  }
+
+  get timerStateLabel(): string {
+    if (this.isPaused) {
+      return 'Paused';
+    }
+
+    if (this.isRunning) {
+      return this.currentPhase;
+    }
+
+    if (this.workoutCompleted) {
+      return 'Finished';
+    }
+
+    return 'Ready';
+  }
+
+  get primaryActionLabel(): string {
+    if (this.workoutCompleted) {
+      return 'Restart';
+    }
+
+    if (this.isPaused) {
+      return 'Resume';
+    }
+
+    if (this.isRunning) {
+      return 'Pause';
+    }
+
+    return 'Start';
+  }
+
+  get primaryActionIcon(): string {
+    if (this.workoutCompleted) {
+      return '↻';
+    }
+
+    if (this.isPaused) {
+      return '▶';
+    }
+
+    if (this.isRunning) {
+      return '❚❚';
+    }
+
+    return '▶';
+  }
+
+  get isPrimaryActionDisabled(): boolean {
+    return !this.isRunning && !this.isPaused && !this.workoutCompleted && !this.canStartTimer();
+  }
+
+  get visibleTechniqueGroups(): TechniqueGroup[] {
+    if (!this.isCombinationMode()) {
+      return [];
+    }
+
+    if (this.instructionService.combinationCategory === 'punches_only') {
+      return this.techniqueGroups.filter((group) => group.family === 'punch');
+    }
+
+    if (this.instructionService.combinationCategory === 'kicks_only') {
+      return this.techniqueGroups.filter((group) => group.family === 'kick');
+    }
+
+    return this.techniqueGroups;
   }
 
   testSpeech(): void {
@@ -72,6 +145,10 @@ export class BoxingTimerComponent implements AfterViewInit {
     return this.instructionService.instructionMode === 'combination';
   }
 
+  isFullContactMode(): boolean {
+    return this.isCombinationMode() && this.instructionService.combinationCategory === 'full_contact';
+  }
+
   canStartTimer(): boolean {
     if (!this.isCombinationMode()) {
       return true;
@@ -84,9 +161,82 @@ export class BoxingTimerComponent implements AfterViewInit {
     return this.instructionService.isTechniqueEnabled(techniqueId);
   }
 
-  onTechniqueToggle(techniqueId: string, event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.instructionService.setTechniqueEnabled(techniqueId, input.checked);
+  setInstructionMode(mode: InstructionMode): void {
+    if (this.instructionService.noInstructions) {
+      return;
+    }
+
+    this.instructionService.instructionMode = mode;
+  }
+
+  setCombinationCategory(category: CombinationCategory): void {
+    if (this.instructionService.noInstructions) {
+      return;
+    }
+
+    this.instructionService.combinationCategory = category;
+  }
+
+  toggleTechnique(techniqueId: string): void {
+    if (this.instructionService.noInstructions) {
+      return;
+    }
+
+    this.instructionService.setTechniqueEnabled(techniqueId, !this.isTechniqueEnabled(techniqueId));
+  }
+
+  selectAllVisibleTechniques(): void {
+    this.updateVisibleTechniques(true);
+  }
+
+  resetVisibleTechniques(): void {
+    this.updateVisibleTechniques(false);
+  }
+
+  handlePrimaryAction(): void {
+    if (this.workoutCompleted) {
+      this.workoutCompleted = false;
+      this.startBoxingTimer();
+      return;
+    }
+
+    if (this.isPaused) {
+      this.resumeTimer();
+      return;
+    }
+
+    if (this.isRunning) {
+      this.pauseTimer();
+      return;
+    }
+
+    this.startBoxingTimer();
+  }
+
+  adjustInstructionInterval(delta: number): void {
+    this.instructionService.instructionInterval = Math.max(1, this.instructionService.instructionInterval + delta);
+  }
+
+  adjustInstructionMin(delta: number): void {
+    const nextValue = Math.max(1, this.instructionService.instructionMinValue + delta);
+    this.instructionService.instructionMinValue = Math.min(nextValue, this.instructionService.instructionMaxValue);
+  }
+
+  adjustInstructionMax(delta: number): void {
+    const nextValue = Math.max(1, this.instructionService.instructionMaxValue + delta);
+    this.instructionService.instructionMaxValue = Math.max(nextValue, this.instructionService.instructionMinValue);
+  }
+
+  adjustActiveTime(delta: number): void {
+    this.activeTime = Math.max(1, this.activeTime + delta);
+  }
+
+  adjustRestTime(delta: number): void {
+    this.restTime = Math.max(0, this.restTime + delta);
+  }
+
+  adjustRounds(delta: number): void {
+    this.rounds = Math.max(1, this.rounds + delta);
   }
 
   startBoxingTimer(): void {
@@ -94,6 +244,7 @@ export class BoxingTimerComponent implements AfterViewInit {
       return;
     }
 
+    this.workoutCompleted = false;
     this.isRunning = true;
     this.timeLeft = this.getPhaseDuration();
     this.currentRound = 1;
@@ -102,7 +253,7 @@ export class BoxingTimerComponent implements AfterViewInit {
     this.startTimer();
   }
 
-  resetTimer(): void {
+  resetTimer(markCompleted = false): void {
     this.stopTimers();
     this.instructionService.stopSpeaking();
     this.timeLeft = 0;
@@ -110,6 +261,7 @@ export class BoxingTimerComponent implements AfterViewInit {
     this.isRunning = false;
     this.isPaused = false;
     this.currentPhase = 'Active';
+    this.workoutCompleted = markCompleted;
   }
 
   pauseTimer(): void {
@@ -129,6 +281,10 @@ export class BoxingTimerComponent implements AfterViewInit {
 
   stopTimer(): void {
     this.resetTimer();
+  }
+
+  trackTechnique(_: number, technique: TechniqueDefinition): string {
+    return technique.id;
   }
 
   private startTimer(): void {
@@ -171,7 +327,7 @@ export class BoxingTimerComponent implements AfterViewInit {
 
   private endWorkout(): void {
     this.instructionService.speakInstruction('DING DING DING Entrainement termine!');
-    this.stopTimer();
+    this.resetTimer(true);
   }
 
   private playPhaseStart(): void {
@@ -202,5 +358,17 @@ export class BoxingTimerComponent implements AfterViewInit {
 
   private isRestPhase(): boolean {
     return this.currentPhase === 'Rest';
+  }
+
+  private updateVisibleTechniques(enabled: boolean): void {
+    if (this.instructionService.noInstructions) {
+      return;
+    }
+
+    this.visibleTechniqueGroups.forEach((group) => {
+      group.techniques.forEach((technique) => {
+        this.instructionService.setTechniqueEnabled(technique.id, enabled);
+      });
+    });
   }
 }

@@ -26,9 +26,22 @@ export class InstructionsService {
   readonly techniqueCatalog = TECHNIQUE_CATALOG;
   readonly enabledTechniqueIds = new Set<string>(this.techniqueCatalog.map((technique) => technique.id));
 
+  private _fullContactPunchRatio = 75;
   private hasAnnouncedInvalidCombinationSelection = false;
 
   constructor(public speechService: SpeechService) {}
+
+  public get fullContactPunchRatio(): number {
+    return this._fullContactPunchRatio;
+  }
+
+  public set fullContactPunchRatio(value: number) {
+    this._fullContactPunchRatio = Math.max(0, Math.min(100, Math.round(value)));
+  }
+
+  public get fullContactKickRatio(): number {
+    return 100 - this.fullContactPunchRatio;
+  }
 
   public startInstructionTimer(currentPhase: string): void {
     if (this.noInstructions) {
@@ -112,18 +125,44 @@ export class InstructionsService {
   }
 
   private generateCombinationInstruction(): GeneratedInstruction | null {
-    const techniques = this.getTechniquesForCategory();
-    if (techniques.length === 0) {
+    const techniqueCount = this.getRandomInstructionCount();
+    const combination = this.combinationCategory === 'full_contact'
+      ? this.generateFullContactCombination(techniqueCount)
+      : this.generateSingleFamilyCombination(techniqueCount, this.getTechniquesForCategory());
+
+    if (combination.length === 0) {
       return null;
     }
-
-    const techniqueCount = this.getRandomInstructionCount();
-    const combination = Array.from({ length: techniqueCount }, () => this.getRandomTechnique(techniques));
 
     return {
       text: combination.join(', '),
       speechProfile: COMBINATION_INSTRUCTION_SPEECH_PROFILE,
     };
+  }
+
+  private generateSingleFamilyCombination(techniqueCount: number, techniques: TechniqueDefinition[]): string[] {
+    if (techniques.length === 0) {
+      return [];
+    }
+
+    return Array.from({ length: techniqueCount }, () => this.getRandomTechnique(techniques));
+  }
+
+  private generateFullContactCombination(techniqueCount: number): string[] {
+    const punches = this.getEnabledTechniquesByFamily('punch');
+    const kicks = this.getEnabledTechniquesByFamily('kick');
+
+    if (punches.length === 0 && kicks.length === 0) {
+      return [];
+    }
+
+    const targets = this.getFullContactTechniqueTargets(techniqueCount, punches.length > 0, kicks.length > 0);
+    const combination = [
+      ...this.generateSingleFamilyCombination(targets.punches, punches),
+      ...this.generateSingleFamilyCombination(targets.kicks, kicks),
+    ];
+
+    return this.shuffleCombination(combination);
   }
 
   private getRandomInstructionCount(): number {
@@ -151,6 +190,41 @@ export class InstructionsService {
     );
   }
 
+  private getFullContactTechniqueTargets(
+    techniqueCount: number,
+    hasPunches: boolean,
+    hasKicks: boolean
+  ): { punches: number; kicks: number } {
+    if (!hasPunches) {
+      return { punches: 0, kicks: techniqueCount };
+    }
+
+    if (!hasKicks) {
+      return { punches: techniqueCount, kicks: 0 };
+    }
+
+    let punchCount = Math.round(techniqueCount * (this.fullContactPunchRatio / 100));
+    punchCount = this.keepNonZeroRatioRepresented(punchCount, techniqueCount, this.fullContactPunchRatio);
+
+    const kickRatio = this.fullContactKickRatio;
+    if (kickRatio > 0 && techniqueCount > 1 && punchCount === techniqueCount) {
+      punchCount = techniqueCount - 1;
+    }
+
+    return {
+      punches: punchCount,
+      kicks: techniqueCount - punchCount,
+    };
+  }
+
+  private keepNonZeroRatioRepresented(count: number, total: number, ratio: number): number {
+    if (ratio > 0 && count === 0 && total > 1) {
+      return 1;
+    }
+
+    return count;
+  }
+
   private getRandomTechnique(techniques: TechniqueDefinition[]): string {
     if (techniques.length === 0) {
       return '';
@@ -158,6 +232,20 @@ export class InstructionsService {
 
     const randomIndex = Math.floor(Math.random() * techniques.length);
     return techniques[randomIndex].label;
+  }
+
+  private shuffleCombination(combination: string[]): string[] {
+    const shuffledCombination = [...combination];
+
+    for (let index = shuffledCombination.length - 1; index > 0; index--) {
+      const randomIndex = Math.floor(Math.random() * (index + 1));
+      [shuffledCombination[index], shuffledCombination[randomIndex]] = [
+        shuffledCombination[randomIndex],
+        shuffledCombination[index],
+      ];
+    }
+
+    return shuffledCombination;
   }
 
   private announceInvalidCombinationSelectionOnce(): void {

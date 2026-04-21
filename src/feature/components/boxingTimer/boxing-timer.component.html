@@ -1,148 +1,286 @@
-<div class="timer-config">
-  <mat-tab-group>
-    <mat-tab label="Voix">
-      <div *ngIf="speechService.statusMessage as statusMessage">
-        <p>{{ statusMessage }}</p>
-        <button *ngIf="speechService.isNativePlatform && speechService.needsVoiceInstall" mat-raised-button color="primary" (click)="openTtsInstall()">
-          Open Android TTS Settings
-        </button>
-      </div>
+<section class="timer-config app-card">
+  <mat-tab-group class="training-tabs" dynamicHeight>
+    <mat-tab label="Timer">
+      <div class="tab-panel timer-panel">
+        <div class="timer-hero app-card">
+          <div class="timer-hero-copy">
+            <p class="timer-state">{{ timerStateLabel }}</p>
+            <h2>Boxing rounds</h2>
+            <p class="timer-summary">{{ activeTime }}s work • {{ restTime }}s rest • {{ rounds }} rounds</p>
+          </div>
 
-      <div>
-        <label>
-          Speech rate:
-        </label>
-        <mat-slider min="0.5" max="1.5" step="0.05" showTickMarks discrete>
-          <input matSliderThumb [(ngModel)]="speechService.speechRate">
-        </mat-slider>
-      </div>
+          <clock
+            [rounds]="rounds"
+            [currentRound]="currentRound"
+            [timeLeft]="timeLeft"
+            [currentPhase]="currentPhase">
+          </clock>
 
-      <div>
-        <label>
-          Speech volume:
-        </label>
-        <mat-slider min="0" max="1" step="0.05" showTickMarks discrete>
-          <input matSliderThumb [(ngModel)]="speechService.speechVolume">
-        </mat-slider>
-      </div>
+          <p class="timer-warning" *ngIf="!canStartTimer()">
+            {{ instructionService.getInvalidCombinationSelectionMessage() }}
+          </p>
 
-      <p *ngIf="speechService.isNativePlatform">
-        Android uses the default voice configured by the selected TTS engine. The app does not expose manual voice selection.
-      </p>
-      <p *ngIf="speechService.isNativePlatform">
-        Volume is requested through the plugin, but some Android TTS engines may still follow the device media volume settings.
-      </p>
-
-      <button mat-raised-button color="primary" (click)="testSpeech()" [disabled]="!speechService.isReady">
-        Test speech
-      </button>
-    </mat-tab>
-
-    <mat-tab label="Instructions">
-      <div>
-        <label>
-          Instruction interval (seconds):
-          <input type="number" [(ngModel)]="instructionService.instructionInterval" min="1" [disabled]="instructionService.noInstructions" />
-        </label>
-      </div>
-      <div>
-        <label>
-          Instruction mode:
-          <select [(ngModel)]="instructionService.instructionMode" [disabled]="instructionService.noInstructions">
-            <option *ngFor="let mode of instructionModes" [ngValue]="mode.value">{{ mode.label }}</option>
-          </select>
-        </label>
-      </div>
-      <div *ngIf="isCombinationMode()">
-        <label>
-          Combination category:
-          <select [(ngModel)]="instructionService.combinationCategory" [disabled]="instructionService.noInstructions">
-            <option *ngFor="let category of combinationCategories" [ngValue]="category.value">{{ category.label }}</option>
-          </select>
-        </label>
-      </div>
-      <div>
-        <label>
-          Instruction min / max count:
-        </label>
-        <mat-slider min="1" max="10" step="1" showTickMarks discrete [disabled]="instructionService.noInstructions">
-          <input value="1" matSliderStartThumb [(ngModel)]="instructionService.instructionMinValue" [disabled]="instructionService.noInstructions">
-          <input value="3" matSliderEndThumb [(ngModel)]="instructionService.instructionMaxValue" [disabled]="instructionService.noInstructions">
-        </mat-slider>
-      </div>
-      <p class="instruction-hint" *ngIf="instructionService.instructionMode === 'number'">
-        The min and max values define the spoken number range.
-      </p>
-      <p class="instruction-hint" *ngIf="isCombinationMode()">
-        The min and max values define how many techniques are spoken in each combination.
-      </p>
-      <div class="technique-selection" *ngIf="isCombinationMode()">
-        <p class="technique-selection-title">Technique selection</p>
-        <div class="technique-group" *ngFor="let group of techniqueGroups">
-          <p class="technique-group-title">{{ group.label }}</p>
-          <label class="technique-option" *ngFor="let technique of group.techniques">
-            <input
-              type="checkbox"
-              [checked]="isTechniqueEnabled(technique.id)"
-              (change)="onTechniqueToggle(technique.id, $event)"
-              [disabled]="instructionService.noInstructions"
-            />
-            <span>{{ technique.label }}</span>
-          </label>
+          <div class="primary-actions">
+            <button
+              type="button"
+              class="primary-action"
+              [class.running]="isRunning && !isPaused"
+              [class.finished]="workoutCompleted"
+              (click)="handlePrimaryAction()"
+              [disabled]="isPrimaryActionDisabled">
+              <span aria-hidden="true">{{ primaryActionIcon }}</span>
+              {{ primaryActionLabel }}
+            </button>
+            <button type="button" class="secondary-action" (click)="stopTimer()" [disabled]="!isRunning && !isPaused">
+              Stop
+            </button>
+          </div>
         </div>
       </div>
-      <p class="instruction-warning" *ngIf="isCombinationMode() && !instructionService.hasEnabledTechniquesForSelectedCategory()">
-        {{ instructionService.getInvalidCombinationSelectionMessage() }}
-      </p>
-      <div class="checkbox-container">
-        <input type="checkbox" id="noInstructions" [(ngModel)]="instructionService.noInstructions" />
-        <label for="noInstructions">Disable instructions</label>
+    </mat-tab>
+
+    <mat-tab label="Training">
+      <div class="tab-panel config-panel">
+        <section class="config-card app-card">
+          <div>
+            <h3 class="section-title">Instruction mode</h3>
+            <p class="section-copy">Choose what gets called during active rounds.</p>
+          </div>
+          <div class="pill-group">
+            <button
+              *ngFor="let mode of instructionModes"
+              type="button"
+              class="pill-button"
+              [class.active]="instructionService.instructionMode === mode.value"
+              [disabled]="instructionService.noInstructions"
+              (click)="setInstructionMode(mode.value)">
+              {{ mode.label }}
+            </button>
+          </div>
+        </section>
+
+        <section class="config-card app-card">
+          <div>
+            <h3 class="section-title">Instruction interval</h3>
+            <p class="section-copy">Seconds between calls.</p>
+          </div>
+          <div class="stepper">
+            <button type="button" (click)="adjustInstructionInterval(-1)" [disabled]="instructionService.noInstructions">−</button>
+            <div class="stepper-value">
+              <strong>{{ instructionService.instructionInterval }}</strong>
+              <span>seconds</span>
+            </div>
+            <button type="button" (click)="adjustInstructionInterval(1)" [disabled]="instructionService.noInstructions">+</button>
+          </div>
+        </section>
+
+        <section class="config-card app-card">
+          <div>
+            <h3 class="section-title">Instruction count</h3>
+            <p class="section-copy" *ngIf="instructionService.instructionMode === 'number'">Spoken number range.</p>
+            <p class="section-copy" *ngIf="isCombinationMode()">Techniques per combination.</p>
+          </div>
+
+          <div class="dual-stepper">
+            <div class="stepper-block">
+              <span class="stepper-label">Min</span>
+              <div class="stepper">
+                <button type="button" (click)="adjustInstructionMin(-1)" [disabled]="instructionService.noInstructions">−</button>
+                <div class="stepper-value">
+                  <strong>{{ instructionService.instructionMinValue }}</strong>
+                  <span>minimum</span>
+                </div>
+                <button type="button" (click)="adjustInstructionMin(1)" [disabled]="instructionService.noInstructions">+</button>
+              </div>
+            </div>
+
+            <div class="stepper-block">
+              <span class="stepper-label">Max</span>
+              <div class="stepper">
+                <button type="button" (click)="adjustInstructionMax(-1)" [disabled]="instructionService.noInstructions">−</button>
+                <div class="stepper-value">
+                  <strong>{{ instructionService.instructionMaxValue }}</strong>
+                  <span>maximum</span>
+                </div>
+                <button type="button" (click)="adjustInstructionMax(1)" [disabled]="instructionService.noInstructions">+</button>
+              </div>
+            </div>
+          </div>
+
+          <mat-slider min="1" max="10" step="1" discrete [disabled]="instructionService.noInstructions">
+            <input matSliderStartThumb [(ngModel)]="instructionService.instructionMinValue" [disabled]="instructionService.noInstructions">
+            <input matSliderEndThumb [(ngModel)]="instructionService.instructionMaxValue" [disabled]="instructionService.noInstructions">
+          </mat-slider>
+        </section>
+
+        <section class="config-card app-card" *ngIf="isCombinationMode()">
+          <div>
+            <h3 class="section-title">Combination category</h3>
+            <p class="section-copy">Keep combinations focused or mix everything.</p>
+          </div>
+          <div class="pill-group">
+            <button
+              *ngFor="let category of combinationCategories"
+              type="button"
+              class="pill-button"
+              [class.active]="instructionService.combinationCategory === category.value"
+              [disabled]="instructionService.noInstructions"
+              (click)="setCombinationCategory(category.value)">
+              {{ category.label }}
+            </button>
+          </div>
+        </section>
+
+        <section class="config-card app-card ratio-card" *ngIf="isFullContactMode()">
+          <div>
+            <h3 class="section-title">Full contact mix</h3>
+            <p class="section-copy">
+              Punches {{ instructionService.fullContactPunchRatio }}% / Kicks {{ instructionService.fullContactKickRatio }}%
+            </p>
+          </div>
+          <mat-slider min="0" max="100" step="5" discrete [disabled]="instructionService.noInstructions">
+            <input matSliderThumb [(ngModel)]="instructionService.fullContactPunchRatio" [disabled]="instructionService.noInstructions">
+          </mat-slider>
+        </section>
+
+        <section class="config-card app-card" *ngIf="isCombinationMode()">
+          <div class="card-header-row">
+            <div>
+              <h3 class="section-title">Technique selection</h3>
+              <p class="section-copy">Only enabled techniques feed the generator.</p>
+            </div>
+            <div class="quick-actions">
+              <button type="button" class="compact-button" (click)="selectAllVisibleTechniques()" [disabled]="instructionService.noInstructions">Select all</button>
+              <button type="button" class="compact-button" (click)="resetVisibleTechniques()" [disabled]="instructionService.noInstructions">Reset</button>
+            </div>
+          </div>
+
+          <div class="technique-family" *ngFor="let group of visibleTechniqueGroups">
+            <p class="technique-group-title">{{ group.label }}</p>
+            <div class="technique-chip-grid">
+              <button
+                *ngFor="let technique of group.techniques; trackBy: trackTechnique"
+                type="button"
+                class="technique-chip"
+                [class.active]="isTechniqueEnabled(technique.id)"
+                [disabled]="instructionService.noInstructions"
+                (click)="toggleTechnique(technique.id)">
+                {{ technique.label }}
+              </button>
+            </div>
+          </div>
+
+          <p class="instruction-warning" *ngIf="!instructionService.hasEnabledTechniquesForSelectedCategory()">
+            {{ instructionService.getInvalidCombinationSelectionMessage() }}
+          </p>
+        </section>
+
+        <section class="config-card app-card">
+          <div class="toggle-card">
+            <div>
+              <h3 class="section-title">Voice instructions</h3>
+              <p class="section-copy">Disable spoken calls without changing training settings.</p>
+            </div>
+            <button
+              type="button"
+              class="pill-button"
+              [class.active]="!instructionService.noInstructions"
+              (click)="instructionService.noInstructions = !instructionService.noInstructions">
+              {{ instructionService.noInstructions ? 'Disabled' : 'Enabled' }}
+            </button>
+          </div>
+        </section>
       </div>
     </mat-tab>
 
     <mat-tab label="Rounds">
-      <div>
-        <label>
-          Active Time (seconds):
-          <input type="number" [(ngModel)]="activeTime" />
-        </label>
-      </div>
-      <div>
-        <label>
-          Rest Time (seconds):
-          <input type="number" [(ngModel)]="restTime" />
-        </label>
-      </div>
-      <div>
-        <label>
-          Number of Rounds:
-          <input type="number" [(ngModel)]="rounds" />
-        </label>
+      <div class="tab-panel config-panel">
+        <section class="config-card app-card">
+          <div>
+            <h3 class="section-title">Active time</h3>
+            <p class="section-copy">Length of each work round.</p>
+          </div>
+          <div class="stepper">
+            <button type="button" (click)="adjustActiveTime(-15)">−</button>
+            <div class="stepper-value">
+              <strong>{{ activeTime }}</strong>
+              <span>seconds</span>
+            </div>
+            <button type="button" (click)="adjustActiveTime(15)">+</button>
+          </div>
+        </section>
+
+        <section class="config-card app-card">
+          <div>
+            <h3 class="section-title">Rest time</h3>
+            <p class="section-copy">Recovery between rounds.</p>
+          </div>
+          <div class="stepper">
+            <button type="button" (click)="adjustRestTime(-5)">−</button>
+            <div class="stepper-value">
+              <strong>{{ restTime }}</strong>
+              <span>seconds</span>
+            </div>
+            <button type="button" (click)="adjustRestTime(5)">+</button>
+          </div>
+        </section>
+
+        <section class="config-card app-card">
+          <div>
+            <h3 class="section-title">Rounds</h3>
+            <p class="section-copy">Total number of work rounds.</p>
+          </div>
+          <div class="stepper">
+            <button type="button" (click)="adjustRounds(-1)">−</button>
+            <div class="stepper-value">
+              <strong>{{ rounds }}</strong>
+              <span>rounds</span>
+            </div>
+            <button type="button" (click)="adjustRounds(1)">+</button>
+          </div>
+        </section>
       </div>
     </mat-tab>
 
-    <mat-tab label="Timer">
-      <div class="button-group">
-        <button mat-icon-button color="primary" (click)="startBoxingTimer()" [disabled]="isRunning || !canStartTimer()">
-          <span aria-hidden="true">&#9654;</span>
-          <span>Play</span>
-        </button>
-        <button mat-icon-button color="accent" (click)="pauseTimer()" [disabled]="!isRunning || isPaused">
-          <span aria-hidden="true">&#10074;&#10074;</span>
-          <span>Pause</span>
-        </button>
-        <button mat-icon-button color="primary" (click)="resumeTimer()" [disabled]="!isRunning || !isPaused">
-          <span aria-hidden="true">&#8635;</span>
-          <span>Resume</span>
-        </button>
-        <button mat-icon-button color="warn" (click)="stopTimer()" [disabled]="!isRunning">
-          <span aria-hidden="true">&#9632;</span>
-          <span>Stop</span>
+    <mat-tab label="Voice">
+      <div class="tab-panel config-panel">
+        <section class="config-card app-card" *ngIf="speechService.statusMessage as statusMessage">
+          <div class="status-card">
+            <p>{{ statusMessage }}</p>
+          </div>
+          <button
+            *ngIf="speechService.isNativePlatform && speechService.needsVoiceInstall"
+            type="button"
+            class="primary-inline-button"
+            (click)="openTtsInstall()">
+            Open Android TTS settings
+          </button>
+        </section>
+
+        <section class="config-card app-card">
+          <div>
+            <h3 class="section-title">Speech rate</h3>
+            <p class="section-copy">{{ speechService.speechRate | number:'1.2-2' }}</p>
+          </div>
+          <mat-slider min="0.5" max="1.5" step="0.05" discrete>
+            <input matSliderThumb [(ngModel)]="speechService.speechRate">
+          </mat-slider>
+        </section>
+
+        <section class="config-card app-card">
+          <div>
+            <h3 class="section-title">Volume</h3>
+            <p class="section-copy">{{ speechService.speechVolume | number:'1.2-2' }}</p>
+          </div>
+          <mat-slider min="0" max="1" step="0.05" discrete>
+            <input matSliderThumb [(ngModel)]="speechService.speechVolume">
+          </mat-slider>
+        </section>
+
+        <button type="button" class="primary-inline-button" (click)="testSpeech()" [disabled]="!speechService.isReady">
+          Test voice
         </button>
       </div>
-
-      <clock [rounds]="rounds" [currentRound]="currentRound" [timeLeft]="timeLeft" [currentPhase]="currentPhase">
-      </clock>
     </mat-tab>
   </mat-tab-group>
-</div>
+</section>

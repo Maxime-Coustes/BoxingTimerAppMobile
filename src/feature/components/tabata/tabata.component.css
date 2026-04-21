@@ -1,110 +1,156 @@
-.tabata-workout h2 {
-  text-align:  center;
-  font-size: 1.2rem;
+.tabata-workout {
+  width: min(100%, 860px);
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.tabata-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.tabata-header h2 {
+  margin: 0.2rem 0 0;
+  color: var(--text);
+  font-size: clamp(1.7rem, 4vw, 2.3rem);
+}
+
+.tabata-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.tabata-action {
+  min-height: 48px;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 16px;
+  color: white;
+  font-weight: 700;
+}
+
+.tabata-action.start {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+}
+
+.tabata-action.stop {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.tabata-action.skip {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.tabata-current {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.current-copy {
+  margin-bottom: 0.5rem;
+}
+
+.workout-steps {
+  display: grid;
+  gap: 0.75rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.workout-steps li {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: rgba(15, 23, 42, 0.64);
+}
+
+.workout-steps li.active {
+  border-color: rgba(59, 130, 246, 0.38);
+  background: rgba(37, 99, 235, 0.12);
+}
+
+.workout-steps li.completed {
+  border-color: rgba(34, 197, 94, 0.3);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.phase-header {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.phase-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.2);
+  color: #dbeafe;
+  font-weight: 700;
+}
+
+.phase-title-block {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.phase-title {
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.phase-rounds,
+.phase-details {
+  color: var(--muted);
+}
+
+.phase-details {
+  margin-top: 0.8rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.phase-details p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.phase-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  margin-right: 0.5rem;
+  padding: 0 0.55rem;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.16);
+  color: #bbf7d0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.phase-tag.rest {
+  background: rgba(59, 130, 246, 0.16);
+  color: #bfdbfe;
+}
+
+@media (max-width: 720px) {
+  .tabata-header,
+  .tabata-actions {
+    flex-direction: column;
+    align-items: stretch;
   }
-  
-  .control-buttons button {
-    margin: 10px;
-    padding: 10px 20px;
-    font-size: 1rem;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .control-buttons button:hover {
-    background-color: #f0f0f0;
-  }
-  
-  .control-buttons button:first-child {
-    background-color: #4caf50; /* Green for Play */
-    color: white;
-  }
-  
-  .control-buttons button:last-child {
-    background-color: #f44336; /* Red for Stop */
-    color: white;
-  }
-  
-  .controls {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 20px;
-  }
-  
-  button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    font-size: 1rem;
-    cursor: pointer;
-    background-color: #007bff;
-    color: white;
-    transition: background-color 0.3s ease;
-  }
-  
-  button:hover {
-    background-color: #0056b3;
-  }
-  
-  button:active {
-    background-color: #003f7f;
-  }
-  
-  .tabata-workout {
-    margin: 20px;
-  }
-  
-  .workout-steps {
-    list-style: none;
-    padding: 0;
-  }
-  
-  .workout-steps li {
-    padding: 10px;
-    margin: 5px 0;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #f9f9f9;
-    transition: all 0.3s ease;
-  }
-  
-  .workout-steps li.active {
-    border-color: #007bff;
-    background-color: #e7f3ff;
-  }
-  
-  .workout-steps li.completed {
-    background-color: #dff0d8;
-    border-color: #4caf50;
-  }
-  
-  .phase-header {
-    display: flex;
-    align-items: center;
-  }
-  
-  .phase-number {
-    width: 30px;
-    height: 30px;
-    line-height: 30px;
-    text-align: center;
-    background-color: #007bff;
-    color: white;
-    border-radius: 50%;
-    margin-right: 10px;
-    font-weight: bold;
-  }
-  
-  .phase-title {
-    font-size: 1.2rem;
-    font-weight: bold;
-  }
-  
-  .phase-details {
-    margin-top: 10px;
-    font-size: 0.9rem;
-    color: #555;
-  }
-  
+}
