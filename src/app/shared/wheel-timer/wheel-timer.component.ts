@@ -145,13 +145,13 @@ export class WheelTimer {
      * Arrête complètement le minuteur et réinitialise ses valeurs.
     */
     stopTimer() {
-        if (this.timerId) {
-            clearInterval(this.timerId);
-            this.isTimerRunning = false;
-            this.isPaused = false;
-            this.pausedTime = 0;
-            this.displayTime = "00:00:00";
-        }
+        clearInterval(this.timerId);
+        this.timerId = null;
+        this.isTimerRunning = false;
+        this.isPaused = false;
+        this.remainingTimeInSeconds = 0;
+        this.pausedTime = 0;
+        this.displayTime = "00:00:00";
     }
 
     /**

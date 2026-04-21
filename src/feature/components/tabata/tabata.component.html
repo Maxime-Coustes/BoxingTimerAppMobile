@@ -1,33 +1,53 @@
-<div class="tabata-workout">
-    <h2>Tabata Boxing !</h2>
+<section class="tabata-workout app-card">
+  <div class="tabata-header">
+    <div>
+      <p class="eyebrow">Tabata</p>
+      <h2>Structured session</h2>
+    </div>
+    <div class="tabata-actions">
+      <button type="button" class="tabata-action start" (click)="startTabata()">Start</button>
+      <button type="button" class="tabata-action stop" (click)="stopTabata()">Stop</button>
+      <button type="button" class="tabata-action skip" (click)="moveToNextPhase()">Next</button>
+    </div>
+  </div>
 
-    <ul class="workout-steps">
-        <li *ngFor="let phase of tabataSequence; let index = index" [class.active]="index === currentPhaseIndex"
-            [class.completed]="index < currentPhaseIndex">
-            <div class="phase-header">
-                <span class="phase-number">{{ index + 1 }}</span>
-                <span class="phase-title">{{ phase.id }}</span>
-            </div>
-            <div class="phase-details" *ngIf="index === currentPhaseIndex">
-                <!-- <p><b>Rounds :</b> {{ phase.rounds }}</p> -->
-                <p *ngFor="let subPhase of phase.phases">
-                    <span *ngIf="subPhase.type === 'active'">- Active : {{ subPhase.duration }}s</span>
-                    <span *ngIf="subPhase.type === 'active' && subPhase.description">- {{ subPhase.description }}</span>
-                    <span *ngIf="subPhase.type === 'rest'">- Rest : {{ subPhase.duration }}s</span>
-                </p>
-                <p *ngIf="phase.endRest"><b>Rest after phase :</b> {{ phase.endRest }}s</p>
+  <div class="tabata-current" *ngIf="tabataSequence[currentPhaseIndex] as phase">
+    <div class="current-copy">
+      <p class="section-title">{{ phase.id }}</p>
+      <p class="section-copy">Round {{ currentRound }} of {{ phase.rounds }}</p>
+    </div>
+    <clock
+      [timeLeft]="remainingTime"
+      [rounds]="phase.rounds"
+      [currentRound]="currentRound"
+      [currentPhase]="phase.id"
+      [displayRound]="true">
+    </clock>
+  </div>
 
-                <!-- Timer Component -->
-                <clock [timeLeft]="remainingTime" [rounds]="phase.rounds" [currentRound]="currentRound"
-                    [currentPhase]="phase.id" [displayRound]="true">
-                </clock>
-            </div>
-            <!-- Buttons -->
-            <div class="control-buttons">
-                <button (click)="startTabata()">▶</button>
-                <button (click)="stopTabata()">⏹</button>
-                <button (click)="moveToNextPhase()">=></button>
-            </div>
-        </li>
-    </ul>
-</div>
+  <ul class="workout-steps">
+    <li
+      *ngFor="let phase of tabataSequence; let index = index"
+      [class.active]="index === currentPhaseIndex"
+      [class.completed]="index < currentPhaseIndex">
+      <div class="phase-header">
+        <span class="phase-number">{{ index + 1 }}</span>
+        <div class="phase-title-block">
+          <span class="phase-title">{{ phase.id }}</span>
+          <span class="phase-rounds">{{ phase.rounds }} round<span *ngIf="phase.rounds > 1">s</span></span>
+        </div>
+      </div>
+
+      <div class="phase-details">
+        <p *ngFor="let subPhase of phase.phases">
+          <span class="phase-tag" [class.rest]="subPhase.type === 'rest'">
+            {{ subPhase.type === 'active' ? 'Active' : 'Rest' }}
+          </span>
+          {{ subPhase.duration }}s
+          <span *ngIf="subPhase.type === 'active' && subPhase.description">• {{ subPhase.description }}</span>
+        </p>
+        <p *ngIf="phase.endRest">Break after block • {{ phase.endRest }}s</p>
+      </div>
+    </li>
+  </ul>
+</section>

@@ -1,9 +1,26 @@
 <div class="app-container">
-  <button class="scroll-button left" (click)="scrollLeft()">&#8592;</button> <!-- Flèche gauche -->
-  <div class="content-container">
+  <div class="shell-header">
+    <div>
+      <p class="eyebrow">Boxing Timer</p>
+      <h1>Training tool</h1>
+    </div>
+    <div class="screen-nav" aria-label="Main sections">
+      <button
+        *ngFor="let screen of screens; let index = index"
+        type="button"
+        class="screen-nav-button"
+        [class.active]="activeScreenIndex === index"
+        (click)="scrollToScreen(index)">
+        {{ screen }}
+      </button>
+    </div>
+  </div>
+
+  <button class="scroll-button left" (click)="scrollLeft()" aria-label="Previous section">&#8592;</button>
+  <div class="content-container" (scroll)="onScroll($event)">
     <boxing-timer class="boxing-timer"></boxing-timer>
     <wheel-timer class="wheel-timer"></wheel-timer>
     <tabata class="tabata"></tabata>
   </div>
-  <button class="scroll-button right" (click)="scrollRight()">&#8594;</button> <!-- Flèche droite -->
+  <button class="scroll-button right" (click)="scrollRight()" aria-label="Next section">&#8594;</button>
 </div>

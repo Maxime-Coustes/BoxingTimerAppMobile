@@ -1,15 +1,11 @@
-<div class="time-display-container">
-    <svg class="time-display" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36">
-        <!-- Texte affichant le temps restant avec couleur dynamique -->
-        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="3rem"
-            [attr.stroke]="timeLeft === 0 ? 'blue' : (currentPhase === 'Active' ? 'red' : 'blue')" fill="none"
-            [attr.textLength]="'90%'">
-            {{ formatTime(timeLeft) }}
-        </text>
+<div class="time-display-container" [class.rest-phase]="currentPhase === 'Rest'" [class.active-phase]="currentPhase === 'Active'">
+  <div class="round-pill" *ngIf="displayRound">
+    <span>Round</span>
+    <strong>{{ currentRound }} / {{ rounds }}</strong>
+  </div>
 
-
-    </svg>
-    <div *ngIf="true == displayRound">
-        <h2>Round: {{ currentRound }} / {{ rounds }}</h2>
-    </div>
+  <div class="time-display">
+    <p class="phase-label">{{ currentPhase || 'Ready' }}</p>
+    <div class="time-value">{{ formatTime(timeLeft) }}</div>
+  </div>
 </div>

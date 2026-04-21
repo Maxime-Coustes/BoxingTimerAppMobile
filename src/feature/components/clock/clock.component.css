@@ -1,38 +1,75 @@
-/* Conteneur du texte affichant le temps */
 .time-display-container {
-  position: relative;
-  width: 100%;
-  height: 30vh; /* Occupe 30% de la hauteur de l'écran */
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  flex-direction: column; /* Ajouté pour empiler les éléments verticaux */
+  justify-content: center;
+  gap: 0.65rem;
+  width: 100%;
+  min-height: 0;
+  padding: 0.25rem 0;
 }
 
-/* Le SVG contenant le texte */
+.round-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 999px;
+  background: rgba(30, 41, 59, 0.6);
+  color: var(--muted);
+  font-size: 0.88rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.round-pill strong {
+  color: var(--text);
+  font-size: 0.95rem;
+  letter-spacing: normal;
+}
+
 .time-display {
-  position: relative;
-  width: 70%;  /* Largeur relative au conteneur */
-  height: auto; /* Ajuste la hauteur automatiquement */
-  max-width: 200px;  /* Limite de taille maximale */
-  max-height: 200px; /* Limite de taille maximale */
-  margin-bottom: 20px;  /* Ajout d'un espace sous le texte */
+  width: min(100%, 520px);
+  padding: 0.9rem 0.85rem;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top, rgba(59, 130, 246, 0.14), transparent 50%),
+    rgba(15, 23, 42, 0.72);
 }
 
-/* Le texte dans le SVG */
-.time-display text {
-  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  font-size: 0.5rem;
-  letter-spacing: 0.01em;  /* Ajuster légèrement l'espacement */
-  transform: scaleX(1.01); /* Augmenter légèrement la largeur du texte */
-  text-anchor: middle;
-  dominant-baseline: middle;
-}
-
-
-/* Style pour l'affichage du round */
-h2 {
-  font-size: 1.5rem; /* Taille modérée pour les rounds */
+.phase-label {
+  margin: 0 0 0.45rem;
+  color: #93c5fd;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   text-align: center;
-  margin: 0;
+}
+
+.time-value {
+  color: var(--text);
+  text-align: center;
+  font-size: clamp(2.5rem, 11vw, 4.6rem);
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.time-display-container.active-phase .time-display {
+  box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.15);
+}
+
+.time-display-container.active-phase .phase-label {
+  color: #86efac;
+}
+
+.time-display-container.rest-phase .time-display {
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.18);
+}
+
+.time-display-container.rest-phase .phase-label {
+  color: #93c5fd;
 }
