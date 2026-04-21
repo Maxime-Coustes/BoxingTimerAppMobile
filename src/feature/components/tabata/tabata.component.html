@@ -2,52 +2,81 @@
   <div class="tabata-header">
     <div>
       <p class="eyebrow">Tabata</p>
-      <h2>Structured session</h2>
+      <h2>{{ hasWorkoutStarted ? currentBlockLabel : 'Guided session' }}</h2>
     </div>
     <div class="tabata-actions">
-      <button type="button" class="tabata-action start" (click)="startTabata()">Start</button>
-      <button type="button" class="tabata-action stop" (click)="stopTabata()">Stop</button>
-      <button type="button" class="tabata-action skip" (click)="moveToNextPhase()">Next</button>
+      <button type="button" class="tabata-action start" (click)="startTabata()" *ngIf="!hasWorkoutStarted">Start</button>
+      <button type="button" class="tabata-action stop" (click)="stopTabata()" *ngIf="hasWorkoutStarted">Stop</button>
+      <button type="button" class="tabata-action skip" (click)="moveToNextPhase()" *ngIf="hasWorkoutStarted">Next</button>
     </div>
   </div>
 
-  <div class="tabata-current" *ngIf="tabataSequence[currentPhaseIndex] as phase">
-    <div class="current-copy">
-      <p class="section-title">{{ phase.id }}</p>
-      <p class="section-copy">Round {{ currentRound }} of {{ phase.rounds }}</p>
+  <ng-container *ngIf="!hasWorkoutStarted; else activeWorkout">
+    <div class="overview-hero">
+      <p class="section-title">Workout flow</p>
+      <p class="section-copy">A fixed personal session: warm up, build speed, hit power, then cool down.</p>
     </div>
-    <clock
-      [timeLeft]="remainingTime"
-      [rounds]="phase.rounds"
-      [currentRound]="currentRound"
-      [currentPhase]="phase.id"
-      [displayRound]="true">
-    </clock>
-  </div>
 
-  <ul class="workout-steps">
-    <li
-      *ngFor="let phase of tabataSequence; let index = index"
-      [class.active]="index === currentPhaseIndex"
-      [class.completed]="index < currentPhaseIndex">
-      <div class="phase-header">
-        <span class="phase-number">{{ index + 1 }}</span>
-        <div class="phase-title-block">
-          <span class="phase-title">{{ phase.id }}</span>
-          <span class="phase-rounds">{{ phase.rounds }} round<span *ngIf="phase.rounds > 1">s</span></span>
+    <div class="overview-grid">
+      <article class="overview-card" *ngFor="let block of workoutOverview; let index = index">
+        <span class="overview-index">{{ index + 1 }}</span>
+        <div>
+          <h3>{{ block.title }}</h3>
+          <p class="overview-count">{{ block.count }}</p>
+          <p class="overview-rhythm">{{ block.rhythm }}</p>
+          <p class="overview-description">{{ block.description }}</p>
         </div>
+      </article>
+    </div>
+
+    <div class="up-next-card">
+      <span>First up</span>
+      <strong>{{ getDisplayPhaseTitle(tabataSequence[0].id) }}</strong>
+      <p>{{ tabataSequence[0].phases[0].description }}</p>
+    </div>
+  </ng-container>
+
+  <ng-template #activeWorkout>
+    <div class="execution-panel">
+      <div class="execution-status">
+        <span class="phase-tag" [class.rest]="currentSubPhase.type === 'rest'">{{ currentPhaseStateLabel }}</span>
+        <span class="phase-rhythm">{{ getPhaseRhythm(currentPhase) }}</span>
       </div>
 
-      <div class="phase-details">
-        <p *ngFor="let subPhase of phase.phases">
-          <span class="phase-tag" [class.rest]="subPhase.type === 'rest'">
-            {{ subPhase.type === 'active' ? 'Active' : 'Rest' }}
-          </span>
-          {{ subPhase.duration }}s
-          <span *ngIf="subPhase.type === 'active' && subPhase.description">• {{ subPhase.description }}</span>
-        </p>
-        <p *ngIf="phase.endRest">Break after block • {{ phase.endRest }}s</p>
+      <clock
+        [timeLeft]="remainingTime"
+        [rounds]="currentPhase.rounds"
+        [currentRound]="currentRound"
+        [currentPhase]="currentBlockLabel"
+        [displayRound]="true">
+      </clock>
+
+      <div class="round-progress" *ngIf="currentPhase.rounds > 1" aria-label="Round progress">
+        <span
+          *ngFor="let round of blockProgressDots"
+          class="round-dot"
+          [class.done]="round < currentRound"
+          [class.active]="round === currentRound">
+        </span>
       </div>
-    </li>
-  </ul>
+
+      <div class="coach-card">
+        <p class="coach-label">Coach note</p>
+        <p>{{ currentDescription }}</p>
+      </div>
+    </div>
+
+    <div class="compact-timeline">
+      <article
+        *ngFor="let phase of tabataSequence; let index = index"
+        [class.active]="index === currentPhaseIndex"
+        [class.completed]="index < currentPhaseIndex">
+        <span class="timeline-index">{{ index + 1 }}</span>
+        <div>
+          <strong>{{ getDisplayPhaseTitle(phase.id) }}</strong>
+          <p>{{ getPhaseRhythm(phase) }}</p>
+        </div>
+      </article>
+    </div>
+  </ng-template>
 </section>

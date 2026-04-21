@@ -12,6 +12,33 @@ import { InstructionsService } from '../../../app/shared/instructions/instructio
 export class TabataComponent {
   constructor(private instructionService: InstructionsService) { }
 
+  readonly workoutOverview = [
+    {
+      title: 'Warmup',
+      count: '2 blocks',
+      rhythm: '3:00 work / 1:00 rest',
+      description: 'Technique first, then light accelerations.',
+    },
+    {
+      title: 'Speed',
+      count: '4 blocks',
+      rhythm: '8 rounds - 20s / 10s',
+      description: 'High pace with short recovery.',
+    },
+    {
+      title: 'Power',
+      count: '4 blocks',
+      rhythm: '1:00 work / 0:30 rest',
+      description: 'Short, powerful combinations.',
+    },
+    {
+      title: 'Cooldown',
+      count: '1 block',
+      rhythm: '3:00 light boxing',
+      description: 'Bring the heart rate down.',
+    },
+  ];
+
   tabataSequence = [
     {
       id: 'Échauffement 1 sur 2', // Identifiant pour cette phase
@@ -136,6 +163,74 @@ export class TabataComponent {
   currentSubPhaseIndex = 0; // Sous-phase actuelle (active ou repos)
   remainingTime = 0; // Temps restant
   timer: any; // Référence pour le setInterval
+
+  get hasWorkoutStarted(): boolean {
+    return this.remainingTime > 0 || this.currentPhaseIndex > 0 || this.currentSubPhaseIndex > 0;
+  }
+
+  get currentPhase() {
+    return this.tabataSequence[this.currentPhaseIndex];
+  }
+
+  get currentSubPhase() {
+    return this.currentPhase.phases[this.currentSubPhaseIndex];
+  }
+
+  get currentDescription(): string {
+    if (this.currentSubPhase.type === 'rest') {
+      return 'Recover and get ready for the next effort.';
+    }
+
+    return this.currentPhase.phases[0].description ?? '';
+  }
+
+  get currentPhaseStateLabel(): string {
+    return this.currentSubPhase.type === 'active' ? 'Active' : 'Rest';
+  }
+
+  get currentBlockLabel(): string {
+    return this.getDisplayPhaseTitle(this.currentPhase.id);
+  }
+
+  get blockProgressDots(): number[] {
+    return Array.from({ length: this.currentPhase.rounds }, (_, index) => index + 1);
+  }
+
+  getDisplayPhaseTitle(phaseId: string): string {
+    const normalizedPhaseId = phaseId.toLowerCase();
+
+    if (normalizedPhaseId.includes('chauffement')) {
+      return phaseId.includes('2') ? 'Warmup 2 / 2' : 'Warmup 1 / 2';
+    }
+
+    if (normalizedPhaseId.includes('vitesse')) {
+      return `Speed ${this.getBlockNumber(phaseId)} / 4`;
+    }
+
+    if (normalizedPhaseId.includes('puissance')) {
+      return `Power ${this.getBlockNumber(phaseId)} / 4`;
+    }
+
+    if (normalizedPhaseId.includes('cooldown')) {
+      return 'Cooldown';
+    }
+
+    return phaseId;
+  }
+
+  getPhaseRhythm(phase: any): string {
+    const activePhase = phase.phases.find((subPhase: any) => subPhase.type === 'active');
+    const restPhase = phase.phases.find((subPhase: any) => subPhase.type === 'rest');
+    const activeDuration = activePhase ? `${activePhase.duration}s` : '-';
+    const restDuration = restPhase && restPhase.duration > 0 ? `${restPhase.duration}s rest` : 'no rest';
+
+    return `${phase.rounds} round${phase.rounds > 1 ? 's' : ''} - ${activeDuration} / ${restDuration}`;
+  }
+
+  private getBlockNumber(phaseId: string): string {
+    const match = phaseId.match(/\d+/);
+    return match ? match[0] : '1';
+  }
 
   // Démarre le timer
   startTabata() {
